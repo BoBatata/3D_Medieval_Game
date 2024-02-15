@@ -2,30 +2,39 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Animations;
 
 public class PlayerMovement : MonoBehaviour
 {
     PlayerInput playerInput;
     CharacterController characterController;
 
+    private Animator animator;
+
     private Vector2 currentMovementInput;
     private Vector3 currentMovement;
     private bool isMovementPressed;
     private float rotationPerFrame = 15f;
 
+    private int isMovingAnimatorHash;
+
     private void Awake()
     {
         playerInput = new PlayerInput();
+        animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
 
         playerInput.Movement.Move.started += onMovement;
         playerInput.Movement.Move.canceled += onMovement;
         playerInput.Movement.Move.performed += onMovement;
+
+        GetAnimatorHash();
     }
 
     private void Update()
     {
         PlayerRotation();
+        Animate();
         characterController.Move(currentMovement * Time.deltaTime);
     }
 
@@ -54,6 +63,18 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void Animate()
+    {
+        if (isMovementPressed && animator.GetBool(isMovingAnimatorHash) == false)
+        {
+            animator.SetBool(isMovingAnimatorHash, true);
+        }
+        else if (!isMovementPressed && animator.GetBool(isMovingAnimatorHash) == true)
+        {
+            animator.SetBool(isMovingAnimatorHash, false);
+        }
+    }
+
     void Gravity()
     {
         if (characterController.isGrounded)
@@ -66,6 +87,11 @@ public class PlayerMovement : MonoBehaviour
             float gravity = -9.8f;
             currentMovement.y += gravity;
         }
+    }
+
+    private void GetAnimatorHash()
+    {
+        isMovingAnimatorHash = Animator.StringToHash("isMoving");
     }
 
     private void OnEnable()
